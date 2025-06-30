@@ -9,7 +9,7 @@ app.get('/health', (req, res) => {
 
 // Main route
 app.get('/', (req, res) => {
-  res.send('Hello from Node.js on Azure VMSS!');
+  res.send('Hello from Node.js on Azure VMSSPOC!');
 });
 
 app.listen(port, () => {
