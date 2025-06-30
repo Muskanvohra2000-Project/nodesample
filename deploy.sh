@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP_DIR="/var/www/nodeapp"
-REPO_URL="https://github.com/YOUR-USER/YOUR-REPO.git"
+REPO_URL="https://github.com/Muskanvohra2000-Project/nodesample.git"
 BRANCH="main"
 PM2_APP_NAME="nodeapp"
 
