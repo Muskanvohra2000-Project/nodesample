@@ -32,11 +32,3 @@ jobs:
               "commandToExecute": "bash Deploy.sh"
             }' \
             --force-update
-
-      - name: Deploy to Azure VMSS using Custom Script Extension
-        run: |
-          az vmss list-instances \
-            --resource-group $RESOURCE_GROUP \
-            --name $VMSS_NAME \
-            --query "[].{Instance:instanceId, Status:instanceView.extensions[?name=='customScript']|[0].statuses[0].displayStatus}" \
-            --output table
