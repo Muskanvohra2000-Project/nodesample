@@ -29,5 +29,5 @@ jobs:
            --publisher Microsoft.Azure.Extensions \
            --version 2.0 \
            --settings "{\"fileUris\": [\"$FILE_URL\"], \"commandToExecute\": \"bash Deploy.sh\"}" \
-           --protected-settings "{\"environmentVariables\": [{\"name\": \"GITHUB_USERNAME\", \"value\": \"${{ secrets.GITHUB_USERNAME }}\"}, {\"name\": \"GITHUB_TOKEN\", \"value\": \"${{ secrets.GITHUB_TOKEN }}\"}]}"
+           --protected-settings "{\"environmentVariables\": [{\"name\": \"USERNAME\", \"value\": \"${{ secrets.USERNAME }}\"}, {\"name\": \"token\", \"value\": \"${{ secrets.token }}\"}]}"
 
