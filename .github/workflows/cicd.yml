@@ -33,31 +33,10 @@ jobs:
             }' \
             --force-update
 
-      - name: ✅ Verify VMSS deployment status
+      - name: Deploy to Azure VMSS using Custom Script Extension
         run: |
-          echo "🔍 Verifying VMSS deployment status..."
-          retries=10
-          delay=15
-
-          for ((i=1; i<=retries; i++)); do
-            echo "🔁 Attempt $i: Checking instance extension status..."
-
-            STATUS=$(az vmss list-instances \
-              --resource-group "${{ secrets.RESOURCE_GROUP }}" \
-              --name "${{ secrets.VMSS_NAME }}" \
-              --query "[].{id:instanceId, status: instanceView.extensions[?name=='customScript']|[0].statuses[0].displayStatus}" \
-              --output tsv)
-
-            echo "$STATUS"
-
-            if echo "$STATUS" | grep -q "Provisioning succeeded"; then
-              echo "✅ All VMSS instances reported successful deployment."
-              exit 0
-            fi
-
-            echo "⏳ Waiting $delay seconds before retrying..."
-            sleep $delay
-          done
-
-          echo "❌ Deployment did not succeed on all instances after $retries retries."
-          exit 1
+          az vmss list-instances \
+            --resource-group $RESOURCE_GROUP \
+            --name $VMSS_NAME \
+            --query "[].{Instance:instanceId, Status:instanceView.extensions[?name=='customScript']|[0].statuses[0].displayStatus}" \
+            --output table
