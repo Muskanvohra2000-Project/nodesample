@@ -29,5 +29,5 @@ jobs:
             --version 2.0 \
             --settings '{
               "fileUris": ["${{ secrets.DEPLOY_SCRIPT_URL }}"],
-              "commandToExecute": "bash deploy.sh"
+              "commandToExecute": "bash Deploy.sh"
             }'
