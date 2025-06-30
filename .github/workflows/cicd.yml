@@ -1,0 +1,32 @@
+name: CI/CD to Azure VMSS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to VMSS using customScript
+      run: |
+        az vmss extension set \
+          --resource-group "${{ secrets.RESOURCE_GROUP }}" \
+          --vmss-name "${{ secrets.VMSS_NAME }}" \
+          --name customScript \
+          --publisher Microsoft.Azure.Extensions \
+          --version 2.0 \
+          --settings '{
+            "fileUris": ["${{ secrets.DEPLOY_SCRIPT_URL }}"],
+            "commandToExecute": "bash deploy.sh"
+          }'
+
