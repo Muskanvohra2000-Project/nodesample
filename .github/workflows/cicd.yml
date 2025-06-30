@@ -26,7 +26,7 @@ jobs:
             --vmss-name "${{ secrets.VMSS_NAME }}" \
             --name customScript \
             --publisher Microsoft.Azure.Extensions \
-            --version 2.10 \
+            --version 2.0 \
             --settings '{
               "fileUris": ["${{ secrets.DEPLOY_SCRIPT_URL }}"],
               "commandToExecute": "bash Deploy.sh"
