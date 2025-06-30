@@ -32,3 +32,23 @@ jobs:
               "commandToExecute": "bash Deploy.sh"
             }' \
             --force-update
+
+      - name: ✅ Verify VMSS deployment status
+        run: |
+          echo "🔍 Verifying VMSS deployment status..."
+
+          STATUS=$(az vmss list-instances \
+            --resource-group "${{ secrets.RESOURCE_GROUP }}" \
+            --name "${{ secrets.VMSS_NAME }}" \
+            --query "[].{Instance:instanceId, Status:instanceView.extensions[?name=='customScript']|[0].statuses[0].code}" \
+            --output tsv)
+
+          echo "$STATUS"
+
+          echo "$STATUS" | grep -q "ProvisioningState/succeeded"
+          if [ $? -ne 0 ]; then
+            echo "❌ One or more VMSS instances failed during customScript execution."
+            exit 1
+          else
+            echo "✅ All VMSS instances reported successful deployment."
+          fi
