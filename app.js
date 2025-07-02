@@ -1,6 +1,6 @@
 // 1. Require and configure Application Insights at the very top
 const appInsights = require('applicationinsights');
-appInsights.setup("ConnectionString=InstrumentationKey=bfc9ea62-5154-4c3d-bdad-4ee9bdb34cd4") // ⬅️ Use your actual connection string
+appInsights.setup("InstrumentationKey=bfc9ea62-5154-4c3d-bdad-4ee9bdb34cd4;IngestionEndpoint=https://centralindia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://centralindia.livediagnostics.monitor.azure.com/;ApplicationId=8d59dcf4-b44a-4d87-bea8-25b1d151af72") // ⬅️ Use your actual connection string
     .setAutoCollectRequests(true)
     .setAutoCollectPerformance(true)
     .setAutoCollectExceptions(true)
