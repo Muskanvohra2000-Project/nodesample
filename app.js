@@ -10,7 +10,7 @@ appInsights.setup("InstrumentationKey=bfc9ea62-5154-4c3d-bdad-4ee9bdb34cd4;Inges
 
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000; // ✅ use env PORT
+const port = process.env.PORT || 3000;
 
 // 2. Access the default telemetry client (optional for custom logs)
 const client = appInsights.defaultClient;
