@@ -22,7 +22,7 @@ app.get('/health', (req, res) => {
 
 // Main route
 app.get('/', (req, res) => {
-  res.send('Hello from Node.js on Azure VMSS ho ra h fr fail kuu');
+  res.send('Hello from Node.js on Azure VMSS. Changes Done.');
   client.trackTrace({ message: "Main route hit" }); // Optional trace
 });
 
