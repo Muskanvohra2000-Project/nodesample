@@ -1,14 +1,10 @@
 # InfraSentinel — Code Analysis Gate
-# Save as .github/workflows/code-analysis.yml
-
 name: Code Analysis
-
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
   pull_request:
-    branches: ["main"]
-
+    branches: ["**"]
 jobs:
   code-analysis:
     runs-on: ubuntu-latest
@@ -16,7 +12,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-
       - name: Run InfraSentinel Code Analysis
         run: |
           DIFF=$(git diff HEAD~1 HEAD --unified=5 2>/dev/null || git show HEAD --unified=5)
@@ -31,6 +26,5 @@ jobs:
               --arg project "${{ github.repository }}" \
               '{diff:$diff,branch:$branch,commitSha:$sha,commitMessage:$msg,project:$project}')")
           echo "$RESULT" | jq '{recommendation,buildWillPass,deploymentWillWork,summary}'
-          echo "$RESULT" | jq -r '.issues[]? | "  [\(.severity)] \(.type) — \(.file // ""):\(.line // "") — \(.message)"'
           REC=$(echo "$RESULT" | jq -r '.recommendation')
-          [ "$REC" = "PASS" ] || { echo "::error::Pipeline failed — $REC. Fix issues above."; exit 1; }
+          [ "$REC" = "PASS" ] || { echo "::error::Analysis failed — $REC"; exit 1; }
