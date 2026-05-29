@@ -1,41 +1,45 @@
+# InfraSentinel — Code Analysis Gate
+  # Save as .github/workflows/code-analysis.yml
 
-### InfraSentinel — Code Analysis Gate
-# Save as .github/workflows/code-analysis.yml
+  name: Code Analysis
 
-name: Code Analysis
+  on:
+    push:
+      branches: ["**"]
+    pull_request:
+      branches: ["**"]
 
-on:
-  push:
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
+  jobs:
+    code-analysis:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 2
 
-jobs:
-  code-analysis:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: InfraSentinel Code Analysis
-        env:
-          IS_API_KEY: ${{ secrets.INFRA_SENTINEL_API_KEY }}
-          GH_BRANCH: ${{ github.ref_name }}
-          GH_SHA: ${{ github.sha }}
-          GH_PROJECT: ${{ github.repository }}
-        run: |
-          DIFF=$(git diff HEAD~1 HEAD --unified=5 2>/dev/null || git show HEAD --unified=5)
-          PAYLOAD=$(printf '%s' "$DIFF" | jq -Rs \
-            --arg branch "$GH_BRANCH" \
-            --arg sha "$GH_SHA" \
-            --arg project "$GH_PROJECT" \
-            '{diff:.,branch:$branch,commitSha:$sha,project:$project}')
-          RESULT=$(curl -sf -X POST http://43.205.209.168/api/ci/analyze \
-            -H "Content-Type: application/json" \
-            -H "X-API-Key: $IS_API_KEY" \
-            -d "$PAYLOAD")
-          echo "$RESULT" | jq '{recommendation,buildWillPass,deploymentWillWork,summary}'
-          echo "$RESULT" | jq -r '.issues[]? | "  [\(.severity)] \(.type): \(.message)"'
-          REC=$(echo "$RESULT" | jq -r '.recommendation // "FAIL"')
-          [ "$REC" = "PASS" ] || { echo "::error::InfraSentinel blocked — $REC. Fix the issues above."; exit 1; }
+        - name: InfraSentinel Code Analysis
+          env:
+            IS_API_KEY: ${{ secrets.INFRA_SENTINEL_API_KEY }}
+            GH_BRANCH: ${{ github.ref_name }}
+            GH_SHA: ${{ github.sha }}
+            GH_PROJECT: ${{ github.repository }}
+          run: |
+            DIFF=$(git diff HEAD~1 HEAD --unified=5 2>/dev/null || git show HEAD --unified=5)
+            PAYLOAD=$(printf '%s' "$DIFF" | jq -Rs \
+              --arg branch "$GH_BRANCH" \
+              --arg sha "$GH_SHA" \
+              --arg project "$GH_PROJECT" \
+              '{diff:.,branch:$branch,commitSha:$sha,project:$project}')
+            HTTP_CODE=$(curl -s -o /tmp/is_result.json -w "%{http_code}" -X POST http://43.205.209.168/api/ci/analyze \
+              -H "Content-Type: application/json" \
+              -H "X-API-Key: $IS_API_KEY" \
+              -d "$PAYLOAD")
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "::error::InfraSentinel API error (HTTP $HTTP_CODE): $(cat /tmp/is_result.json)"
+              exit 1
+            fi
+            RESULT=$(cat /tmp/is_result.json)
+            echo "$RESULT" | jq '{recommendation,buildWillPass,deploymentWillWork,summary}'
+            echo "$RESULT" | jq -r '.issues[]? | "  [\(.severity)] \(.type): \(.message)"'
+            REC=$(echo "$RESULT" | jq -r '.recommendation // "FAIL"')
+            [ "$REC" = "PASS" ] || { echo "::error::InfraSentinel blocked — $REC. Fix the issues above."; exit 1; }
