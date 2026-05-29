@@ -1,34 +1,36 @@
-name: CI/CD to Azure VMSS
+# InfraSentinel — Code Analysis Gate
+# Save as .github/workflows/code-analysis.yml
+
+name: Code Analysis
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
-  deploy:
+  code-analysis:
     runs-on: ubuntu-latest
-    environment: dev  
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Azure Login
-        uses: azure/login@v1
+      - uses: actions/checkout@v4
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          fetch-depth: 2
 
-      - name: Deploy to Azure VMSS using Custom Script Extension
+      - name: Run InfraSentinel Code Analysis
         run: |
-          echo "🚀 Triggering VMSS extension update with force-refresh..."
-          az vmss extension set \
-            --resource-group "${{ secrets.RESOURCE_GROUP }}" \
-            --vmss-name "${{ secrets.VMSS_NAME }}" \
-            --name customScript \
-            --publisher Microsoft.Azure.Extensions \
-            --version 2.0 \
-            --settings '{
-              "fileUris": ["${{ secrets.DEPLOY_SCRIPT_URL }}"],
-              "commandToExecute": "bash Deploy.sh"
-            }' \
-            --force-update
+          DIFF=$(git diff HEAD~1 HEAD --unified=5 2>/dev/null || git show HEAD --unified=5)
+          RESULT=$(curl -s -X POST http://43.205.209.168/api/ci/analyze \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ${{ secrets.INFRA_SENTINEL_API_KEY }}" \
+            -d "$(jq -n \
+              --arg diff "$DIFF" \
+              --arg branch "${{ github.ref_name }}" \
+              --arg sha "${{ github.sha }}" \
+              --arg msg "${{ github.event.head_commit.message }}" \
+              --arg project "${{ github.repository }}" \
+              '{diff:$diff,branch:$branch,commitSha:$sha,commitMessage:$msg,project:$project}')")
+          echo "$RESULT" | jq '{recommendation,buildWillPass,deploymentWillWork,summary}'
+          echo "$RESULT" | jq -r '.issues[]? | "  [\(.severity)] \(.type) — \(.file // ""):\(.line // "") — \(.message)"'
+          REC=$(echo "$RESULT" | jq -r '.recommendation')
+          [ "$REC" = "PASS" ] || { echo "::error::Pipeline failed — $REC. Fix issues above."; exit 1; }
