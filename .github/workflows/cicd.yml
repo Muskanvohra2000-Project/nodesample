@@ -1,4 +1,4 @@
-# InfraSentinel — Code Analysis Gate
+## InfraSentinel — Code Analysis Gate
   # Save as .github/workflows/code-analysis.yml
 
   name: Code Analysis
